@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="../../../EFT_Decompiled_0.16.9.5/EscapeFromTarkov_0_16_9_5.csproj">
+    <Build Solution="Debug|*" Project="false" />
+  </Project>
+  <Project Path="Client/DartStash_Client.csproj" />
+  <Project Path="Server/DartStash_Server.csproj">
+    <BuildType Project="Release" />
+  </Project>
+</Solution>
