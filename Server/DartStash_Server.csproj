@@ -21,12 +21,10 @@
 
   <ItemGroup>
     <Compile Remove="LoggingSample.cs" />
-    <Compile Remove="ReadJsonConfig.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="LoggingSample.cs" />
-    <None Include="ReadJsonConfig.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -58,8 +56,7 @@
 	  <DeployFiles Include="$(TargetDir)**\*" />
 	</ItemGroup>
 
-	<Copy SourceFiles="@(DeployFiles)"
-		DestinationFiles="@(DeployFiles->'$(SptModDir)%(RecursiveDir)%(Filename)%(Extension)')" />
+	<Copy SourceFiles="@(DeployFiles)" DestinationFiles="@(DeployFiles->'$(SptModDir)%(RecursiveDir)%(Filename)%(Extension)')" />
 
 	<Message Importance="High" Text="Deployed to SPT: $(SptModDir)" />
   </Target>

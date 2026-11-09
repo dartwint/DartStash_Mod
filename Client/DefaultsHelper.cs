@@ -2,5 +2,6 @@
 
 public static class DefaultsHelper
 {
-    public const string TestRoute1 = "/dartwint/DartStash/static";
+    public const string CheckAccessToTheStashRoute = "/dartwint/DartStash/CheckAccessToTheStash"; // for GET
+    public const string ValidateWithClientRoute = "/dartwint/DartStash/Validate"; // for POST
 }

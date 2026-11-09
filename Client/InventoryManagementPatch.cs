@@ -22,23 +22,23 @@ internal class InventoryManagementPatch : ModulePatch
         return AccessTools.Method(typeof(ItemsPanel), nameof(ItemsPanel.Show));
     }
 
-    private static async Task SendTestRequest()
+    private static async Task SendTestPostRequest()
     {
-        // 1. Подготовьте данные для отправки (структура должна соответствовать серверному InventoryStaticRequestData)
-        var requestData = new InventoryStaticRequestData();
+        // Структура должна соответствовать серверному типу
+        var requestData = new ProfileModData();
 
         string jsonBody = JsonConvert.SerializeObject(requestData);
-        string response = RequestHandler.PostJson(DefaultsHelper.TestRoute1, jsonBody);
+        string response = RequestHandler.PostJson(DefaultsHelper.CheckAccessToTheStashRoute, jsonBody);
 
         if (string.IsNullOrWhiteSpace(response))
         {
-
+            InventoryControllerPlugin.LogSource.LogError("Ответ сервера пуст или не удалось разобрать.");
         }
         else
         {
             try
             {
-                var responseData = JsonConvert.DeserializeObject<InventoryStaticRequestData>(response);
+                var responseData = JsonConvert.DeserializeObject<ProfileModData>(response);
 
                 if (responseData != null)
                 {
@@ -73,6 +73,35 @@ internal class InventoryManagementPatch : ModulePatch
         }
     }
 
+    private static async Task SendTestGetRequest()
+    {
+        var responseData = JsonConvert.DeserializeObject<AccessToStashRequestData>(RequestHandler.GetJson(DefaultsHelper.CheckAccessToTheStashRoute));
+        if (responseData != null)
+        {
+            InventoryControllerPlugin.LogSource.LogInfo($"Получены данные: HasAccessToStash={responseData.PlayerPMCStashAccessFlag}");
+
+            bool blockStash = !responseData.PlayerPMCStashAccessFlag;
+            if (blockStash)
+            {
+                // TO DO: REPLACE THAT SH*T
+                GameObject stashPanel = GameObject.Find("Common UI/Common UI/InventoryScreen/Items Panel/Stash Panel");
+                if (stashPanel != null)
+                {
+                    stashPanel.SetActive(false);
+                    InventoryControllerPlugin.LogSource.LogMessage($"Stash panel was disabled.");
+                }
+                else
+                {
+                    InventoryControllerPlugin.LogSource.LogError($"GameObject not found: 'Common UI / Common UI / InventoryScreen / Items Panel / Stash Panel'!");
+                }
+            }
+        }
+        else
+        {
+            InventoryControllerPlugin.LogSource.LogError("Ответ сервера пуст или не удалось разобрать.");
+        }
+    }
+
     /// <summary>
     /// Runs BEFORE original code is executed.
     /// </summary>
@@ -96,16 +125,22 @@ internal class InventoryManagementPatch : ModulePatch
         // "/dartwint/DartStash/static"
         // https://127.0.0.1:6969
 
-        _ = SendTestRequest();
+        //_ = SendTestRequest();
+        _ = SendTestGetRequest();
     }
 }
 
 /// <summary>
 /// Represents the data sent by a client. Tip: that type must be the same on the client mod.
 /// </summary>
-public class InventoryStaticRequestData
+public class AccessToStashRequestData
 {
-    public string PlayerPMCLocation { get; set; } = "Factory";
-    public string PlayerPMCStashLocation { get; set; } = "Factory";
-    public bool PlayerPMCStashAccessFlag { get; set; } = true;
+    public bool PlayerPMCStashAccessFlag { get; set; }
+}
+
+public class ProfileModData
+{
+    public string PlayerPMCLocation { get; set; } = "unknown";
+
+    public string PlayerPMCStashLocation { get; set; } = "unknown";
 }

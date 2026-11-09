@@ -7,33 +7,32 @@ using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Services.Modding;
 using SPTarkov.Server.Core.Utils;
-using System.Text.Json.Serialization;
 
 namespace dartwint.DartStash.Server;
 
 [Injectable]
 public class InventoryStaticRouter(JsonUtil jsonUtil, InventoryStaticRouterCallback routerCallback)
     : StaticRouter(jsonUtil, [
-            new RouteAction<InventoryStaticRequestData>(
-                DefaultsHelper.TestRoute1,
+            new RouteAction<AccessToStashRequestData>(
+                DefaultsHelper.ValidateWithClientRoute,
                 async(
                     url,
                     info,
                     sessionId,
                     output,
                     cancellationToken
-                ) => await routerCallback.HandleExampleStaticRoute(url, info, sessionId)
+                ) => await routerCallback.HandleValidationRoute(url, info, sessionId)
             ),
-            // There are cases where you dont want to send data to the server, in that case you can ignore ExampleStaticRequestData and use EmptyRequestData
+
             new RouteAction<EmptyRequestData>(
-                DefaultsHelper.TestEmptyStaticRoute,
+                DefaultsHelper.CheckAccessToTheStashRoute,
                 async(
                     url,
                     info,
                     sessionId,
                     output,
                     cancellationToken
-                ) => await routerCallback.HandleEmptyExampleStaticRoute(url, info, sessionId)
+                ) => await routerCallback.HandleCheckAccessToStashRoute(url, info, sessionId)
             )
         ])
 {}
@@ -43,20 +42,26 @@ public class InventoryStaticRouterCallback(
     ISptLogger<InventoryStaticRouterCallback> logger,
     HttpResponseUtil httpResponseUtil,
     ProfileHelper profileHelper,
-    ProfileDataService profileDataService)
+    ProfileDataService profileDataService,
+    ModProfileHelper modProfileHelper)
 {
 
     // Returns empty response
-    public ValueTask<string> HandleEmptyExampleStaticRoute(string url, EmptyRequestData info, MongoId sessionId)
+    public async ValueTask<string> HandleCheckAccessToStashRoute(string url, EmptyRequestData info, MongoId sessionId)
     {
-        logger.Info($"Callback on {url} route received! {nameof(HandleEmptyExampleStaticRoute)}|SessionId:{sessionId}");
+        logger.Info($"Callback on {url} route received! {nameof(HandleCheckAccessToStashRoute)} | SessionId:{sessionId}");
 
-        return new ValueTask<string>(httpResponseUtil.NullResponse());
+        var response = new AccessToStashRequestData() 
+        {
+            PlayerPMCStashAccessFlag = await modProfileHelper.PlayersPMCCheckAccessToStash(sessionId) 
+        };
+
+        return httpResponseUtil.NoBody(response);
     }
 
-    public ValueTask<string> HandleExampleStaticRoute(string url, InventoryStaticRequestData info, MongoId sessionId)
+    public ValueTask<string> HandleValidationRoute(string url, AccessToStashRequestData info, MongoId sessionId)
     {
-        logger.Info($"Callback on {url} route received! {nameof(HandleExampleStaticRoute)}|SessionId:{sessionId}");
+        logger.Info($"Callback on {url} route received! {nameof(HandleValidationRoute)} | SessionId:{sessionId}");
 
         //var sptProfile = saveServer.GetProfile(sessionId);
         var sptProfile = profileHelper.GetFullProfile(sessionId); // same as previous operation
@@ -91,32 +96,19 @@ public class InventoryStaticRouterCallback(
             logger.Error("ProfileId or sptProfile.ProfileInfo or sptProfile is null!");
         }
 
-        var responseData = new InventoryStaticRequestData()
+        var responseData = new AccessToStashRequestData()
         {
-            PlayerPMCLocation = "factory",
-            PlayerPMCStashLocation = "factory",
-            PlayerPMCStashAccessFlag = true,
+            PlayerPMCStashAccessFlag = false,
         };
 
         return new ValueTask<string>(httpResponseUtil.NoBody(responseData));
     }
 }
 
-public record ProfileModData
-{
-    [JsonPropertyName("PlayerPMCLocation")]
-    public required string PlayerPMCLocation { get; set; }
-
-    [JsonPropertyName("PlayerPMCStashLocation")]
-    public required string PlayerPMCStashLocation { get; set; }
-}
-
 /// <summary>
-/// Represents the data sent by a client. Tip: that type must be the same on the client mod.
+/// Represents the data sent by a client. That type must be the same on the client mod.
 /// </summary>
-public record InventoryStaticRequestData : IRequestData
+public record AccessToStashRequestData : IRequestData
 {
-    public required string PlayerPMCLocation { get; set; }
-    public required string PlayerPMCStashLocation { get; set; }
     public required bool PlayerPMCStashAccessFlag { get; set; }
 }
