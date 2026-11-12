@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+	<RootNamespace>dartwint.DartStash.Tests</RootNamespace>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="4.0.3" />
+  </ItemGroup>
+
+	<ItemGroup>
+	<!-- Ссылка на клиентский проект -->
+	<ProjectReference Include="..\Client\DartStash_Client.csproj">
+	</ProjectReference>
+
+	<!-- Ссылка на серверный проект -->
+	<ProjectReference Include="..\Server\DartStash_Server.csproj">
+	</ProjectReference>
+  </ItemGroup>
+
+</Project>

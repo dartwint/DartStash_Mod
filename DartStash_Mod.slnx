@@ -3,6 +3,7 @@
     <Build Solution="Debug|*" Project="false" />
   </Project>
   <Project Path="Client/DartStash_Client.csproj" />
+  <Project Path="DartStash_Tests/DartStash_Tests.csproj" Id="5a8a3985-f96d-42ef-9f5b-232561abbc1f" />
   <Project Path="Server/DartStash_Server.csproj">
     <BuildType Project="Release" />
   </Project>
